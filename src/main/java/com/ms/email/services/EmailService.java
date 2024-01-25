@@ -5,11 +5,12 @@ import com.ms.email.enums.StatusEmail;
 import com.ms.email.models.EmailModel;
 import com.ms.email.repositories.EmailRepository;
 import com.ms.email.repositories.UserRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.MailException;
-import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -32,23 +33,24 @@ public class EmailService {
         List<String> subscriberEmailList = getUserEmailList();
         List<EmailModel> emailSends = new ArrayList<>();
 
-
         for (int i=0; i<subscriberEmailList.size(); i++) {
 
             EmailModel emailModel = new EmailModel();
 
             try{
                 BeanUtils.copyProperties(emailDto, emailModel);
-                SimpleMailMessage message = new SimpleMailMessage();
+
+                MimeMessage mimeMessage = emailSender.createMimeMessage();
+                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
                 emailModel.setSendDateEmail(LocalDateTime.now());
-                message.setFrom(emailModel.getEmailFrom());
-                message.setSubject(emailModel.getSubject());
-                message.setText(emailModel.getText());
+                helper.setFrom(emailModel.getEmailFrom());
+                helper.setSubject(emailModel.getSubject());
+                helper.setText(emailModel.getText(), true);
                 emailModel.setEmailTo(getUserEmailList().get(i).toString());
-                message.setTo(emailModel.getEmailTo());
-                emailSender.send(message);
+                helper.setTo(emailModel.getEmailTo());
+                emailSender.send(mimeMessage);
                 emailModel.setStatusEmail(StatusEmail.SENT.name());
-            } catch (MailException e) {
+            } catch (MessagingException e) {
                 emailModel.setStatusEmail(StatusEmail.ERROR.name());
             } finally {
                 emailSends.add(emailModel);

@@ -3,6 +3,7 @@ package com.ms.email.models;
 
 import com.ms.email.enums.StatusEmail;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
